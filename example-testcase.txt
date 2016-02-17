@@ -1,0 +1,7 @@
+# What is the size of the group given by the following presentation?
+#
+S^7=1
+T^2=1
+
+(S^4T)^4=1
+(ST)^3=1
