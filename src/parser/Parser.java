@@ -34,7 +34,31 @@ public class Parser {
         private boolean isInverseOf(Element other) {
             return this.ch == other.ch && this.inverted == !other.inverted;
         }
-    }
+
+       @Override
+       public String toString() {
+           return ch + (inverted ? "\'":"");
+       }
+
+       @Override
+       public boolean equals(Object o) {
+           if (this == o) return true;
+           if (o == null || getClass() != o.getClass()) return false;
+
+           Element element = (Element) o;
+
+           if (ch != element.ch) return false;
+           return inverted == element.inverted;
+
+       }
+
+       @Override
+       public int hashCode() {
+           int result = (int) ch;
+           result = 31 * result + (inverted ? 1 : 0);
+           return result;
+       }
+   }
 
     // PROCESS LISTS OF ELEMENTS
     // =========================
