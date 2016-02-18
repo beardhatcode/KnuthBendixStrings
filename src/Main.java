@@ -1,11 +1,13 @@
+import kbs.RewriteSystem;
 import parser.Parser;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 /**
  * Main program. Reads a group presentation from standard input and
@@ -22,6 +24,20 @@ public class Main {
      */
     private static int sizeOfGroup(List<Parser.Result> list) {
         // this implementation simply returns the number of relations
+
+        Parser.Element[] a = new Parser.Element[]{new Parser.Element('l',false)};
+        Map<Parser.Element[], Parser.Element[]> rules = list.stream()
+                .collect(Collectors.toMap(c -> c.left.toArray(a), c -> c.right.toArray(a)));
+
+        Set<Parser.Element> elements = new HashSet<>();
+        list.forEach(e -> {
+            e.left.forEach(elements::add);
+            e.right.forEach(elements::add);
+        });
+
+        RewriteSystem<Parser.Element> rewriteSystem = new RewriteSystem<>(rules,elements);
+        rewriteSystem.apply(null);
+
         return list.size();
     }
 

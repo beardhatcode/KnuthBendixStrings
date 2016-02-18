@@ -21,11 +21,12 @@ public class ParserTest {
     }
 
     private String translateLHS(String str) throws ParseException {
-        return parser.toString(parser.parse(str).left);
+        return Parser.toString(parser.parse(str).left);
     }
 
+
     @Test
-    public void element() throws ParseException {
+    public void testElement() throws ParseException {
         assertEquals("S", translateLHS("S"));
         assertEquals("S'", translateLHS("S'"));
     }
@@ -66,20 +67,20 @@ public class ParserTest {
     @Test
     public void rhs() throws ParseException {
         Parser.Result r = parser.parse("ST=R");
-        assertEquals ("ST", parser.toString(r.left));
-        assertEquals ("R", parser.toString(r.right));
+        assertEquals ("ST", Parser.toString(r.left));
+        assertEquals ("R", Parser.toString(r.right));
 
         r = parser.parse("((AB))=(AB)");
-        assertEquals ("AB", parser.toString(r.left));
-        assertEquals ("AB", parser.toString(r.right));
+        assertEquals ("AB", Parser.toString(r.left));
+        assertEquals ("AB", Parser.toString(r.right));
 
         r = parser.parse("ab=1");
-        assertEquals ("ab", parser.toString(r.left));
-        assertEquals ("", parser.toString(r.right));
+        assertEquals ("ab", Parser.toString(r.left));
+        assertEquals ("", Parser.toString(r.right));
 
         r = parser.parse("xyz");
-        assertEquals ("xyz", parser.toString(r.left));
-        assertEquals ("", parser.toString(r.right));
+        assertEquals ("xyz", Parser.toString(r.left));
+        assertEquals ("", Parser.toString(r.right));
     }
 
     @Test(expected=ParseException.class)
