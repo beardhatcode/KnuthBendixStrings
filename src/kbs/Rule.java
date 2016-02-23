@@ -1,8 +1,6 @@
 package kbs;
 
-import java.util.LinkedList;
-import java.util.ListIterator;
-import java.util.function.Consumer;
+import java.util.*;
 
 /**
  * Rule of the Rewrite system.
@@ -25,8 +23,8 @@ public class Rule<T>  {
      * @param to The array by witch the from array should be replaced
      */
     public Rule(T[] from, T[] to) {
-        this.from = from;
-        this.to = to;
+        this.from = from.clone();
+        this.to = to.clone();
 
         if (from.length < to.length){
             throw new IllegalArgumentException("The length of the taget should be larger then the source");
@@ -42,22 +40,20 @@ public class Rule<T>  {
         lut = new int[from.length];
         lut[0] = 1;
         lut[1] = 1;
-
         int start = 1;
         int same = 0;
         while (start < from.length - 1) {
             int miss = from.length;
             for (int i = 0; i < from.length; i++) {
-                if (from[i] != from[i + start]) {
+                if (i + start >= from.length || from[i] != from[i + start]) {
                     miss = i;
                     break;
                 }
             }
-
             if (miss == 0) {
                 lut[start + 1] = start + 1;
             } else {
-                for (int i = same + 1; i <= miss; i++) {
+                for (int i = same + 1; i <= miss && i+start<lut.length; i++) {
                     lut[start + i] = start;
                 }
             }
@@ -65,6 +61,7 @@ public class Rule<T>  {
 
             same = (miss == 0 ? 0 : miss - lut[miss]);
         }
+
     }
 
 
@@ -117,7 +114,7 @@ public class Rule<T>  {
                 if (curPos != 0) {
                     //Knuth-Moris-Pratt
                     curPos = curPos - lut[curPos];
-                    iter.previous();
+                    iter.previous();//next .next() is same
                 }
             }
 
@@ -140,6 +137,98 @@ public class Rule<T>  {
         }
 
         return true;
+    }
+
+
+    public Set<CriticalPair> getCritical(Rule<T> other){
+        T[] f1 = this.from;
+        T[] f2 = other.from;
+        T[] t1 = this.to;
+        T[] t2 = other.to;
+
+        Set<CriticalPair> result= new HashSet<>();
+        int start = 0;
+        int cur = 0;
+
+        for(int overlap = Math.min(f1.length,f2.length); overlap > 0; overlap--){
+            boolean ok = true;
+            for (int i = 0; i < overlap && ok; i++) {
+                if(!f2[i].equals(f1[f1.length - overlap + i])){
+                    ok = false;
+                }
+            }
+            if(ok){
+                //Construct from part
+                LinkedList<T> critFrom = new LinkedList<>();
+                for(int i  = 0; i<f1.length ; i++){
+                    critFrom.add(f1[i]);
+                }
+                for(int i = overlap; i < f2.length; i++){
+                    critFrom.add(f2[i]);
+                }
+
+                //Construct result by applying "this" first
+                LinkedList<T> critTo1 = new LinkedList<>();
+
+                for(int i = 0; i< t1.length ; i++){
+                    critTo1.add(t1[i]);
+                }
+                for(int i = overlap; i < f2.length; i++){
+                    critTo1.add(f2[i]);
+                }
+
+                //Construct result by applying "other" first
+                LinkedList<T> critTo2 = new LinkedList<>();
+                for(int i  = 0; i<f1.length - overlap ; i++){
+                    critTo2.add(f1[i]);
+                }
+                for(int i = 0; i < t2.length; i++){
+                    critTo2.add(t2[i]);
+                }
+                result.add(new CriticalPair(critFrom,critTo1,critTo2));
+            }
+        }
+
+
+        return result;
+    }
+
+    CriticalPair createCriticalPair(LinkedList<T> from, LinkedList<T> to1, LinkedList<T> to2){
+        return new CriticalPair( from,  to1, to2);
+    }
+
+    public class CriticalPair{
+        public final LinkedList<T> from;
+        public final LinkedList<T> to1;
+        public final LinkedList<T> to2;
+
+        public CriticalPair(LinkedList<T> from, LinkedList<T> to1, LinkedList<T> to2) {
+            if(from == null  || to1 ==null || to2 == null){
+                throw new IllegalArgumentException("from, to1 and t2 must not be null");
+            }
+
+            this.from = from;
+            this.to1 = to1;
+            this.to2 = to2;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            CriticalPair that = (CriticalPair) o;
+
+            if (!from.equals(that.from)) return false;
+            return (to1.equals(that.to1) && to2.equals(that.to2)) || (to1.equals(that.to2) && to2.equals(that.to1));
+        }
+
+        @Override
+        public int hashCode() {
+            int result = from.hashCode();
+            result = 31 * result + to1.hashCode() + to2.hashCode();
+            return result;
+        }
     }
 
 }

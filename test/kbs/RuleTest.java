@@ -1,8 +1,10 @@
 package kbs;
 
+import com.sun.xml.internal.ws.util.StringUtils;
 import org.junit.Test;
 
 import java.util.LinkedList;
+import java.util.Set;
 import java.util.stream.Collectors;
 import static org.junit.Assert.*;
 
@@ -11,18 +13,23 @@ import static org.junit.Assert.*;
  */
 public class RuleTest {
 
+    public static final Character[] CHARACTERS = new Character[]{'L'};
+
     public LinkedList<Character> makeList(String a){
         return new LinkedList<>(a.chars().mapToObj(c -> (char)c).collect(Collectors.toList()));
     }
 
     public String testRule(String in, String from, String to){
-        Character a[] = new Character[]{'L'};
-        Rule<Character> rule = new Rule<>(makeList(from).toArray(a),makeList(to).toArray(a));
+        Rule<Character> rule = makeCharacterRule(from, to);
         LinkedList<Character> list = makeList(in);
         rule.apply(list);
-        String out = list.stream().map(e->e.toString()).reduce((acc, e) -> acc  + e).get();
+        String out = list.stream().map(Object::toString).reduce((acc, e) -> acc  + e).get();
         System.out.printf("%s -> %s  (by %s -> %s )\n",in,out,from,to);
         return out;
+    }
+
+    private Rule<Character> makeCharacterRule(String from, String to) {
+        return new Rule<>(makeList(from).toArray(CHARACTERS),makeList(to).toArray(CHARACTERS));
     }
 
     @Test
@@ -38,8 +45,36 @@ public class RuleTest {
         testRule("Robbert is tof","tof","awesome");
     }
 
-    @Test
-    public void testGetLut() throws Exception {
 
+    @Test
+    public void testGetCritical() throws Exception {
+        Rule<Character>.CriticalPair expected1,expected2,expected3;
+
+        Rule<Character> a = makeCharacterRule("ABCD","P");
+        Rule<Character> b = makeCharacterRule("CDEF","Q");
+        Set<Rule<Character>.CriticalPair> critical = a.getCritical(b);
+        assertEquals(1,critical.size());
+        expected1 = a.createCriticalPair(makeList("ABCDEF"), makeList("ABQ"), makeList("PEF"));
+        assertTrue(critical.contains(expected1));
+
+        a = makeCharacterRule("ABXX","P");
+        b = makeCharacterRule("XXEF","Q");
+        critical = a.getCritical(b);
+        assertEquals(2,critical.size());
+        expected1 = a.createCriticalPair(makeList("ABXXEF"), makeList("ABQ"), makeList("PEF"));
+        expected2 = a.createCriticalPair(makeList("ABXXXEF"), makeList("ABXQ"), makeList("PXEF"));
+        assertTrue(critical.contains(expected1));
+        assertTrue(critical.contains(expected2));
+
+        a = makeCharacterRule("ABXX","P");
+        b = makeCharacterRule("XXEF","Q");
+        critical = b.getCritical(a);
+        assertEquals(0,critical.size());
+
+
+        a = makeCharacterRule("XXXXX","P");
+        critical = a.getCritical(a);
+        assertEquals(5,critical.size());
     }
+
 }

@@ -35,4 +35,8 @@ public class RewriteSystem<T> {
         }while (doneSomething);
         return input;
     }
+
+    public void complete(){
+
+    }
 }
