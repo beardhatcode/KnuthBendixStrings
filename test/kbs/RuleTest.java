@@ -41,12 +41,12 @@ public class RuleTest {
         assertEquals("RSRSS",testRule("SSRRS","SSRR","RSRS"));
         assertFalse(testRule("SSRRSR","RSRS","X").contains("X"));
         assertFalse(testRule("SSSRSR","RSRS","X").contains("X"));
+
+
+        assertEquals("Should handele inserts correctly","ABC-def-GHIJK",testRule("ABCDEFGHIJK","DEF","-def-"));
+        assertEquals("Should handele inserts correctly","-abcdef-GHIJK",testRule("DEFGHIJK","DEF","-abcdef-"));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testName() throws Exception {
-        testRule("Robbert is tof","tof","awesome");
-    }
 
 
     @Test

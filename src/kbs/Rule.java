@@ -8,9 +8,9 @@ import java.util.*;
  * @author  Robbert Gurdeep Singh
  * @todo handle longer to than from ?
  */
-public class Rule<T>  {
-    private ArrayList<T> from;
-    private ArrayList<T> to;
+public class Rule<T> {
+    private List<T> from;
+    private List<T> to;
     private int lut[];
 
     /**
@@ -25,12 +25,11 @@ public class Rule<T>  {
     public Rule(List<T> from, List<T> to) {
         this.from = new ArrayList<>(from);
         this.to = new ArrayList<>(to);
-
-        if (from.size() < to.size()){
-            throw new IllegalArgumentException("The length of the taget should be larger then the source");
-        }
-
         makeKMP();
+    }
+
+    public Rule(Rule<T> other) {
+        this(other.from,other.to);
     }
 
     /**
@@ -44,7 +43,7 @@ public class Rule<T>  {
         int start = 1;
         int same = 0;
         while (start < size - 1) {
-            int miss = (int) size;
+            int miss =  size;
             for (int i = 0; i < size; i++) {
                 if (i + start >= size || from.get(i) != from.get(i + start)) {
                     miss = i;
@@ -136,6 +135,9 @@ public class Rule<T>  {
             } else {
                 iter.remove();
             }
+        }
+        for (int i = 0; i < to.size() - length; i++) {
+            iter.add(to.get(i));
         }
 
         return true;

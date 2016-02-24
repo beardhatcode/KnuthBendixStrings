@@ -40,7 +40,7 @@ public class RewriteSystem<T> {
 
 
 
-    public Set<Rule<T>.CriticalPair> complete() {
+    public Set<Rule<T>> complete() {
         Set<Rule<T>.CriticalPair> criticalPairs = new HashSet<>();
         Set<Rule<T>> toProcess = new HashSet<>(rules);
         while (true){
@@ -71,11 +71,7 @@ public class RewriteSystem<T> {
                 List<T> small = compare < 0 ? to1 : to2;
                 Rule<T> tRule = new Rule<>(big,small);
 
-                //System.out.println("Optimizable: "+rules.stream().filter(tRule::canOptimize).count());
-
-
                 if(rules.add(tRule)) {
-                    System.out.println(" --> "+tRule);
                     toProcess.add(tRule);
                     added++;
                 }
@@ -86,10 +82,13 @@ public class RewriteSystem<T> {
             }
 
             criticalPairs.clear();
-            rules.stream().map(e->e.toString()).sorted((o1, o2) -> o1.length() - o2.length()).forEach(System.out::println);
 
         }
-        rules.stream().map(e->e.toString()).sorted((o1, o2) -> o1.length() - o2.length()).forEach(System.out::println);
-        return criticalPairs;
+        return getRules();
     }
+
+    public Set<Rule<T>> getRules() {
+        return rules.stream().map(Rule::new).collect(Collectors.toSet());
+    }
+
 }
