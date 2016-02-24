@@ -26,8 +26,8 @@ public class Main {
         // this implementation simply returns the number of relations
 
         Parser.Element[] a = new Parser.Element[]{new Parser.Element('l',false)};
-        Map<Parser.Element[], Parser.Element[]> rules = list.stream()
-                .collect(Collectors.toMap(c -> c.left.toArray(a), c -> c.right.toArray(a)));
+        Map<List<Parser.Element>, List<Parser.Element>> rules = list.stream()
+                .collect(Collectors.toMap(c -> c.left, c -> c.right));
 
         Set<Parser.Element> elements = new HashSet<>();
         list.forEach(e -> {
@@ -35,7 +35,21 @@ public class Main {
             e.right.forEach(elements::add);
         });
 
-        RewriteSystem<Parser.Element> rewriteSystem = new RewriteSystem<>(rules,elements);
+        RewriteSystem<Parser.Element> rewriteSystem = new RewriteSystem<>(rules,(o1, o2) -> {
+            if(o1.size() != o2.size()) return o1.size() - o2.size();
+            Iterator<Parser.Element> iterator1 = o1.iterator();
+            Iterator<Parser.Element> iterator2 = o2.iterator();
+            while ( true ) {
+                Parser.Element next1 = iterator1.next();
+                Parser.Element next2 = iterator2.next();
+                if(next1 == null && next2 == null) return 0;
+                if(next1==null) return -1;
+                if(next2==null) return 1;
+                if(next1.hashCode() == next2.hashCode()) continue;
+                return next1.hashCode() - next2.hashCode();
+            }
+
+        });
         rewriteSystem.apply(null);
 
         return list.size();

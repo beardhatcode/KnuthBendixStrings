@@ -9,8 +9,8 @@ import java.util.*;
  * @todo handle longer to than from ?
  */
 public class Rule<T>  {
-    private T from[];
-    private T to[];
+    private ArrayList<T> from;
+    private ArrayList<T> to;
     private int lut[];
 
     /**
@@ -22,11 +22,11 @@ public class Rule<T>  {
      * @param from An array of elements that should be replaced
      * @param to The array by witch the from array should be replaced
      */
-    public Rule(T[] from, T[] to) {
-        this.from = from.clone();
-        this.to = to.clone();
+    public Rule(List<T> from, List<T> to) {
+        this.from = new ArrayList<>(from);
+        this.to = new ArrayList<>(to);
 
-        if (from.length < to.length){
+        if (from.size() < to.size()){
             throw new IllegalArgumentException("The length of the taget should be larger then the source");
         }
 
@@ -37,15 +37,16 @@ public class Rule<T>  {
      * Make the Knuth-Moris-Pratt Shift table. (helper function)
      */
     private void makeKMP() {
-        lut = new int[from.length];
+        int size = from.size();
+        lut = new int[size];
         lut[0] = 1;
         lut[1] = 1;
         int start = 1;
         int same = 0;
-        while (start < from.length - 1) {
-            int miss = from.length;
-            for (int i = 0; i < from.length; i++) {
-                if (i + start >= from.length || from[i] != from[i + start]) {
+        while (start < size - 1) {
+            int miss = (int) size;
+            for (int i = 0; i < size; i++) {
+                if (i + start >= size || from.get(i) != from.get(i + start)) {
                     miss = i;
                     break;
                 }
@@ -105,11 +106,12 @@ public class Rule<T>  {
     private boolean applyOnIter(ListIterator<T> iter) {
         //Look for an occurrence
         int curPos = 0;
+        int length = from.size();
         while (iter.hasNext()) {
             T cur = iter.next();
-            if (cur.equals(from[curPos])) {
+            if (cur.equals(from.get(curPos))) {
                 curPos++;
-                if (curPos == from.length) break;
+                if (curPos == length) break;
             } else {
                 if (curPos != 0) {
                     //Knuth-Moris-Pratt
@@ -120,17 +122,17 @@ public class Rule<T>  {
 
         }
 
-        if (curPos != from.length) {
+        if (curPos != length) {
             //No match was found
             return false;
         }
 
         //Replace the occurrence backwards and remove excess characters
-        for (int i = 1; i <= from.length; i++) {
+        for (int i = 1; i <= length; i++) {
             //move cursor backwards, if first itteration -> same as last next()
             iter.previous();
-            if (to.length - i >= 0) {
-                iter.set(to[to.length - i]);
+            if (to.size() - i >= 0) {
+                iter.set(to.get(to.size() - i));
             } else {
                 iter.remove();
             }
@@ -141,56 +143,86 @@ public class Rule<T>  {
 
 
     public Set<CriticalPair> getCritical(Rule<T> other){
-        T[] f1 = this.from;
-        T[] f2 = other.from;
-        T[] t1 = this.to;
-        T[] t2 = other.to;
+        ArrayList<T> f1 = this.from;
+        ArrayList<T> f2 = other.from;
+        ArrayList<T> t1 = this.to;
+        ArrayList<T> t2 = other.to;
 
         Set<CriticalPair> result= new HashSet<>();
         int start = 0;
         int cur = 0;
 
-        for(int overlap = Math.min(f1.length,f2.length); overlap > 0; overlap--){
+        for(int overlap = Math.min(f1.size(), f2.size()); overlap > 0; overlap--){
             boolean ok = true;
             for (int i = 0; i < overlap && ok; i++) {
-                if(!f2[i].equals(f1[f1.length - overlap + i])){
+                if(!f2.get(i).equals(f1.get(f1.size() - overlap + i))){
                     ok = false;
                 }
             }
             if(ok){
                 //Construct from part
                 LinkedList<T> critFrom = new LinkedList<>();
-                for(int i  = 0; i<f1.length ; i++){
-                    critFrom.add(f1[i]);
+                for(int i = 0; i< f1.size(); i++){
+                    critFrom.add(f1.get(i));
                 }
-                for(int i = overlap; i < f2.length; i++){
-                    critFrom.add(f2[i]);
+                for(int i = overlap; i < f2.size(); i++){
+                    critFrom.add(f2.get(i));
                 }
 
                 //Construct result by applying "this" first
                 LinkedList<T> critTo1 = new LinkedList<>();
 
-                for(int i = 0; i< t1.length ; i++){
-                    critTo1.add(t1[i]);
+                for(int i = 0; i< t1.size(); i++){
+                    critTo1.add(t1.get(i));
                 }
-                for(int i = overlap; i < f2.length; i++){
-                    critTo1.add(f2[i]);
+                for(int i = overlap; i < f2.size(); i++){
+                    critTo1.add(f2.get(i));
                 }
 
                 //Construct result by applying "other" first
                 LinkedList<T> critTo2 = new LinkedList<>();
-                for(int i  = 0; i<f1.length - overlap ; i++){
-                    critTo2.add(f1[i]);
+                for(int i = 0; i< f1.size() - overlap ; i++){
+                    critTo2.add(f1.get(i));
                 }
-                for(int i = 0; i < t2.length; i++){
-                    critTo2.add(t2[i]);
+                for(int i = 0; i < t2.size(); i++){
+                    critTo2.add(t2.get(i));
                 }
-                result.add(new CriticalPair(critFrom,critTo1,critTo2));
+                if(!critTo1.equals(critTo2)) {
+                    result.add(new CriticalPair(critFrom, critTo1, critTo2));
+                }
             }
         }
 
 
         return result;
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Rule<?> rule = (Rule<?>) o;
+
+        if (!from.equals(rule.from)) return false;
+        return to.equals(rule.to);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = from.hashCode();
+        result = 31 * result + to.hashCode();
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Rule{" +
+                "from=" + from +
+                ", to=" + to +
+                '}';
     }
 
     CriticalPair createCriticalPair(LinkedList<T> from, LinkedList<T> to1, LinkedList<T> to2){
@@ -228,6 +260,15 @@ public class Rule<T>  {
             int result = from.hashCode();
             result = 31 * result + to1.hashCode() + to2.hashCode();
             return result;
+        }
+
+        @Override
+        public String toString() {
+            return "CriticalPair{" +
+                    "from=" + from +
+                    ", to1=" + to1 +
+                    ", to2=" + to2 +
+                    '}';
         }
     }
 

@@ -29,7 +29,7 @@ public class RuleTest {
     }
 
     private Rule<Character> makeCharacterRule(String from, String to) {
-        return new Rule<>(makeList(from).toArray(CHARACTERS),makeList(to).toArray(CHARACTERS));
+        return new Rule<>(makeList(from),makeList(to));
     }
 
     @Test
