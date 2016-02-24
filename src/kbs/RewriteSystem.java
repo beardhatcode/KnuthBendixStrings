@@ -30,8 +30,9 @@ public class RewriteSystem<T> {
         LinkedList<T> input= new LinkedList<>(pInput);
         boolean doneSomething = false;
         do {
+            doneSomething=false;
             for (Rule<T> rule : rules) {
-                doneSomething=rule.applyAll(input)||doneSomething;
+                doneSomething=rule.apply(input)||doneSomething;
             }
         }while (doneSomething);
         return input;
