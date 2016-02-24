@@ -9,8 +9,14 @@ import java.util.stream.Collectors;
 public class RewriteSystem<T> {
 
     private Set<Rule<T>> rules;
+    private Set<Rule<T>> completeRules = null;
     private Comparator<Collection<T>> comparator;
 
+    /**
+     * Make a rewritesystem with the given comparator and ruleset
+     * @param rules      A map of completeRules
+     * @param comparator A comparator indicating the sort order
+     */
     public RewriteSystem(Map<List<T>, List<T>> rules,Comparator<Collection<T>> comparator) {
         //Convert Rules to acctual Rule's
         this.rules = rules.keySet().stream().map(e->new Rule<>(e,rules.get(e))).collect(Collectors.toSet());
@@ -21,17 +27,26 @@ public class RewriteSystem<T> {
 
 
     /**
-     * Apply rules until normal form
-     * @todo test
+     * Apply completeRules until a normal form is reached
+     *
      * @param pInput
      * @return
      */
-    public List<T> apply(List<T> pInput){
+    public List<T> rewrite(List<T> pInput){
+        return rewriteWith(pInput,rules);
+    }
+
+    public List<T> getNormForm(List<T> pInput){
+        complete();
+        return rewriteWith(pInput,completeRules);
+    }
+
+    private List<T> rewriteWith(List<T> pInput, Set<Rule<T>> r) {
         LinkedList<T> input= new LinkedList<>(pInput);
         boolean doneSomething = false;
         do {
             doneSomething=false;
-            for (Rule<T> rule : rules) {
+            for (Rule<T> rule : r) {
                 doneSomething=rule.apply(input)||doneSomething;
             }
         }while (doneSomething);
@@ -39,56 +54,76 @@ public class RewriteSystem<T> {
     }
 
 
+    public void complete() {
+        if(completeRules != null) {
+            return;
+        }
 
-    public Set<Rule<T>> complete() {
+        this.completeRules = new HashSet<>();
+        this.completeRules.addAll(rules);
+
         Set<Rule<T>.CriticalPair> criticalPairs = new HashSet<>();
-        Set<Rule<T>> toProcess = new HashSet<>(rules);
+        Set<Rule<T>> toProcess = new HashSet<>(completeRules);
         while (true){
-            for (Rule<T> rule1 : rules) {
+
+            //Find th critical pairs
+            for (Rule<T> rule1 : completeRules) {
+                //We only need to look at combinations with new completeRules
                 for (Rule<T> rule2 : toProcess) {
                     criticalPairs.addAll(rule1.getCritical(rule2));
                     criticalPairs.addAll(rule2.getCritical(rule1));
                 }
             }
-            toProcess.clear();
+            toProcess.clear(); //done with these
 
+            //No critical pairs left
             if (criticalPairs.size() == 0) break;
+
             int useless = 0;
             int added = 0;
             for (Rule<T>.CriticalPair criticalPair : criticalPairs) {
-                List<T> to1 = this.apply(criticalPair.to1);
-                List<T> to2 = this.apply(criticalPair.to2);
+                List<T> to1 = this.getNormForm(criticalPair.to1);
+                List<T> to2 = this.getNormForm(criticalPair.to2);
 
                 int compare = comparator.compare(to1, to2);
 
-
                 if(compare==0) {
+                    //new rule is 0 transformation after further simplification
                     useless++;
-                    continue; //same after further simplification
+                    continue;
                 }
 
-                List<T> big = compare > 0 ? to1 : to2;
+                List<T> big =   compare > 0 ? to1 : to2;
                 List<T> small = compare < 0 ? to1 : to2;
                 Rule<T> tRule = new Rule<>(big,small);
 
-                if(rules.add(tRule)) {
+                if(completeRules.add(tRule)) {
+                    //Rule was new
                     toProcess.add(tRule);
                     added++;
                 }
 
             }
+
+            //Rules of which the "from" part can be rewritten can be removed, if the new rule
+            //the rule can never be applied because the new rule will rewrite it first (we choose this)
             for (Rule<T> toProces : toProcess) {
-                rules.removeIf(toProces::canOptimize);
+                completeRules.removeIf(toProces::canOptimize);
             }
 
+            //Reuse the critical pairs set
             criticalPairs.clear();
 
         }
-        return getRules();
+
+    }
+
+    public Set<Rule<T>> getCompleteRules() {
+        complete();
+        return completeRules.stream().map(Rule::new).collect(Collectors.toSet());
     }
 
     public Set<Rule<T>> getRules() {
         return rules.stream().map(Rule::new).collect(Collectors.toSet());
     }
-
 }

@@ -1,3 +1,4 @@
+import kbs.Paster;
 import kbs.RewriteSystem;
 import parser.Parser;
 
@@ -6,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.util.*;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
@@ -53,12 +53,30 @@ public class Main {
 
         });
 
-        rewriteSystem.complete();
+        Set<List<Parser.Element>> baseForms = new HashSet<>();
+        Paster<Parser.Element> pasteSet = new Paster<>(elements);
 
-        rewriteSystem.getRules().stream().forEach(System.out::println);
-//        rewriteSystem.apply(null);
+        Set<List<Parser.Element>> sugestions = new HashSet<>();
+        sugestions.add(new ArrayList<>());
 
-        return list.size();
+        Set<List<Parser.Element>> newSugestions = new HashSet<>();
+
+        while (sugestions.size() > 0) {
+            newSugestions.clear();
+            for (List<Parser.Element> sugestion : sugestions) {
+                List<Parser.Element> clean = rewriteSystem.getNormForm(sugestion);
+                if (baseForms.add(clean)) {
+                    System.out.println("Base: "+clean);
+                    newSugestions.add(clean);
+                }
+            }
+            sugestions = pasteSet.paste(newSugestions);
+        }
+
+
+        //rewriteSystem.getCompleteRules().stream().forEach(System.out::println);
+
+        return baseForms.size();
     }
 
     public static void main(String[] args) throws IOException, ParseException {
