@@ -74,24 +74,7 @@ public class Rule<T> {
         ListIterator<T> iter = input.listIterator();
         return applyOnIter(iter);
     }
-
-    /**
-     * Apply the rule to the given LinkedList multiple times (Will be applied to the given reference)
-     * ! NOT GUARANTEED THAT EVERYTHING WILL BE REPLACED
-     * @todo relace everything
-     * @param ts
-     * @return
-     */
-    public boolean applyAll(LinkedList<T> ts) {
-        boolean hasDone = false;
-        ListIterator<T> iter = ts.listIterator();
-        while(iter.hasNext()) {
-            hasDone =  applyOnIter(iter) || hasDone;
-        }
-
-        return applyOnIter(iter);
-    }
-
+    
 
     /**
      * Execute the replace
