@@ -6,7 +6,6 @@ import java.util.*;
  * Rule of the Rewrite system.
  * String finding algorithm of Knuth-Moris-Pratt is used on linked list to ease working with changing lengths.
  * @author  Robbert Gurdeep Singh
- * @todo handle longer to than from ?
  */
 public class Rule<T> {
     private List<T> from;
@@ -74,16 +73,16 @@ public class Rule<T> {
         ListIterator<T> iter = input.listIterator();
         return applyOnIter(iter);
     }
-    
+
 
     /**
-     * Execute the replace
+     * Execute the replacement
      *
      * Works by iterating over the list until a match is found and then using the iterator to
      * replace the match.
      *
      * @param iter active iterator on the linked list
-     * @return
+     * @return a boolean indicating if a replacement was made
      */
     private boolean applyOnIter(ListIterator<T> iter) {
         //Look for an occurrence
@@ -214,10 +213,6 @@ public class Rule<T> {
     }
 
 
-    public boolean isEquiv(){
-        return to.equals(from);
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -227,7 +222,6 @@ public class Rule<T> {
 
         if (!from.equals(rule.from)) return false;
         return to.equals(rule.to);
-
     }
 
     @Override

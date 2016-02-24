@@ -25,7 +25,6 @@ public class Main {
     private static int sizeOfGroup(List<Parser.Result> list) {
         // this implementation simply returns the number of relations
 
-        Parser.Element[] a = new Parser.Element[]{new Parser.Element('l',false)};
         Map<List<Parser.Element>, List<Parser.Element>> rules = list.stream()
                 .collect(Collectors.toMap(c -> c.left, c -> c.right));
 
