@@ -128,10 +128,10 @@ public class Rule<T> {
 
 
     public Set<CriticalPair> getCritical(Rule<T> other){
-        ArrayList<T> f1 = this.from;
-        ArrayList<T> f2 = other.from;
-        ArrayList<T> t1 = this.to;
-        ArrayList<T> t2 = other.to;
+        List<T> f1 = this.from;
+        List<T> f2 = other.from;
+        List<T> t1 = this.to;
+        List<T> t2 = other.to;
 
         Set<CriticalPair> result= new HashSet<>();
         int start = 0;
