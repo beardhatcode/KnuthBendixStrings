@@ -198,6 +198,41 @@ public class Rule<T>  {
     }
 
 
+    /**
+     * find out if this Rule can optimize the given rule
+     * @param other
+     * @return
+     */
+    public boolean canOptimize(Rule<T> other){
+        if(this.equals(other)) return false;
+
+        ListIterator<T> iter = other.from.listIterator();
+        //Look for an occurrence
+        int curPos = 0;
+        int length = from.size();
+        while (iter.hasNext()) {
+            T cur = iter.next();
+            if (cur.equals(from.get(curPos))) {
+                curPos++;
+                if (curPos == length) return true;
+            } else {
+                if (curPos != 0) {
+                    //Knuth-Moris-Pratt
+                    curPos = curPos - lut[curPos];
+                    iter.previous();//next .next() is same
+                }
+            }
+
+        }
+
+        return false;
+    }
+
+
+    public boolean isEquiv(){
+        return to.equals(from);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
