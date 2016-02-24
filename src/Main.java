@@ -40,17 +40,23 @@ public class Main {
             Iterator<Parser.Element> iterator1 = o1.iterator();
             Iterator<Parser.Element> iterator2 = o2.iterator();
             while ( true ) {
+                boolean hasNext1 = iterator1.hasNext();
+                boolean hasNext2 = iterator2.hasNext();
+                if(!hasNext1 && !hasNext2) return 0;
+                if(!hasNext1) return -1;
+                if(!hasNext2) return 1;
                 Parser.Element next1 = iterator1.next();
                 Parser.Element next2 = iterator2.next();
-                if(next1 == null && next2 == null) return 0;
-                if(next1==null) return -1;
-                if(next2==null) return 1;
                 if(next1.hashCode() == next2.hashCode()) continue;
                 return next1.hashCode() - next2.hashCode();
             }
 
         });
-        rewriteSystem.apply(null);
+
+        rewriteSystem.complete();
+
+        rewriteSystem.getRules().stream().forEach(System.out::println);
+//        rewriteSystem.apply(null);
 
         return list.size();
     }
