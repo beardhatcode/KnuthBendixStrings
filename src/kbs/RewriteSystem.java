@@ -10,7 +10,7 @@ public class RewriteSystem<T> {
 
     private Set<Rule<T>> rules;
     private Comparator<Collection<T>> comparator;
-²
+
     public RewriteSystem(Map<List<T>, List<T>> rules,Comparator<Collection<T>> comparator) {
         //Convert Rules to acctual Rule's
         this.rules = rules.keySet().stream().map(e->new Rule<>(e,rules.get(e))).collect(Collectors.toSet());
