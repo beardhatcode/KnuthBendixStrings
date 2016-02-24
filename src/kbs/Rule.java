@@ -220,8 +220,8 @@ public class Rule<T>  {
     @Override
     public String toString() {
         return "Rule{" +
-                "from=" + from +
-                ", to=" + to +
+                  from.toString().replaceAll("[ ,\\[\\]]","") +
+                " -> " + to.toString().replaceAll("[ ,\\[\\]]","") +
                 '}';
     }
 
