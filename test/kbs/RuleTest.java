@@ -77,7 +77,7 @@ public class RuleTest {
 
         a = makeCharacterRule("XXXXX","P");
         critical = a.getCritical(a);
-        assertEquals(5,critical.size());
+        assertEquals(4,critical.size());
     }
 
 }
