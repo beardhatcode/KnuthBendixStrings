@@ -38,6 +38,9 @@ public class RuleTest {
         assertEquals("Should do nothing if not found","tandwiel",testRule("tandwiel","ISNIET","IS"));
         assertEquals("Should replace at most once","bababarGERARDlos",testRule("bababarbarbaroslos","barbaros","GERARD"));
         assertEquals("Should replace at most once","RLLLLLLLLL",testRule("LLLLLLLLLLL","LL","R"));
+        assertEquals("RSRSS",testRule("SSRRS","SSRR","RSRS"));
+        assertFalse(testRule("SSRRSR","RSRS","X").contains("X"));
+        assertFalse(testRule("SSSRSR","RSRS","X").contains("X"));
     }
 
     @Test(expected = IllegalArgumentException.class)
