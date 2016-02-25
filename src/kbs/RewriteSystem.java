@@ -18,8 +18,14 @@ public class RewriteSystem<T> {
      * @param comparator A comparator indicating the sort order
      */
     public RewriteSystem(Map<List<T>, List<T>> rules,Comparator<Collection<T>> comparator) {
-        //Convert Rules to acctual Rule's
-        this.rules = rules.keySet().stream().map(e->new Rule<>(e,rules.get(e))).collect(Collectors.toSet());
+        //Convert Rules to actual Rule's, big to small
+        //Note that ordering does not belong in Rule, because a rule does not need to
+        //know the ordering.
+        this.rules = rules.keySet().stream().map(e -> {
+            List<T> t1 = e;
+            List<T> t2 = rules.get(t1);
+            return comparator.compare(t1,t2) > 0 ? new Rule<>(t1, t2) : new Rule<>(t2, t1);
+        }).collect(Collectors.toSet());
         this.comparator = comparator;
     }
 
