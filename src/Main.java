@@ -18,6 +18,24 @@ import java.util.stream.Collectors;
  */
 public class Main {
 
+    private static final Comparator<Collection<Parser.Element>> SHORTLEX = (o1, o2) -> {
+        if (o1.size() != o2.size()) return o1.size() - o2.size();
+        Iterator<Parser.Element> iterator1 = o1.iterator();
+        Iterator<Parser.Element> iterator2 = o2.iterator();
+        while (true) {
+            boolean hasNext1 = iterator1.hasNext();
+            boolean hasNext2 = iterator2.hasNext();
+            if (!hasNext1 && !hasNext2) return 0;
+            if (!hasNext1) return -1;
+            if (!hasNext2) return 1;
+            Parser.Element next1 = iterator1.next();
+            Parser.Element next2 = iterator2.next();
+            if (next1.hashCode() == next2.hashCode()) continue;
+            return next1.hashCode() - next2.hashCode();
+        }
+
+    };
+
     /**
      * Computes the size of the group specified by the given
      * parser result.
@@ -34,23 +52,8 @@ public class Main {
             e.right.forEach(elements::add);
         });
 
-        RewriteSystem<Parser.Element> rewriteSystem = new RewriteSystem<>(rules,(o1, o2) -> {
-            if(o1.size() != o2.size()) return o1.size() - o2.size();
-            Iterator<Parser.Element> iterator1 = o1.iterator();
-            Iterator<Parser.Element> iterator2 = o2.iterator();
-            while ( true ) {
-                boolean hasNext1 = iterator1.hasNext();
-                boolean hasNext2 = iterator2.hasNext();
-                if(!hasNext1 && !hasNext2) return 0;
-                if(!hasNext1) return -1;
-                if(!hasNext2) return 1;
-                Parser.Element next1 = iterator1.next();
-                Parser.Element next2 = iterator2.next();
-                if(next1.hashCode() == next2.hashCode()) continue;
-                return next1.hashCode() - next2.hashCode();
-            }
 
-        });
+        RewriteSystem<Parser.Element> rewriteSystem = new RewriteSystem<>(rules, SHORTLEX);
 
         Set<List<Parser.Element>> baseForms = new HashSet<>();
         Paster<Parser.Element> pasteSet = new Paster<>(elements);
