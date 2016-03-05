@@ -3,10 +3,11 @@ package kbs;
 import java.util.*;
 
 /**
- * Created by beardhatcode on 24/02/16.
+ * Class that creates every possible outcome of adding a letter of the baseset to the given set of lists
+ * Created by Robbert Gurdeep Singh on 24/02/16.
  */
 public class Paster<T> {
-    private HashSet<T> base = new HashSet<>();
+    private final HashSet<T> base = new HashSet<>();
 
 
     public Paster(Collection<T> base) {

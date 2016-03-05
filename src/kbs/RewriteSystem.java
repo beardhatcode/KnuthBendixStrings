@@ -1,19 +1,21 @@
 package kbs;
 
+
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Created by beardhatcode on 17/02/16.
+ * A rewrite systemn that can complete itself
+ * @param <T> The type of the "characters" in the text
  */
 public class RewriteSystem<T> {
 
-    private Set<Rule<T>> rules;
+    private final Set<Rule<T>> rules;
     private Set<Rule<T>> completeRules = null;
-    private Comparator<Collection<T>> comparator;
+    private final Comparator<Collection<T>> comparator;
 
     /**
-     * Make a rewritesystem with the given comparator and ruleset
+     * Make a rewrite system with the given comparator and ruleset
      * @param rules      A map of completeRules
      * @param comparator A comparator indicating the sort order
      */
@@ -22,37 +24,46 @@ public class RewriteSystem<T> {
         //Note that ordering does not belong in Rule, because a rule does not need to
         //know the ordering.
         this.rules = rules.keySet().stream().map(e -> {
-            List<T> t1 = e;
-            List<T> t2 = rules.get(t1);
-            return comparator.compare(t1,t2) > 0 ? new Rule<>(t1, t2) : new Rule<>(t2, t1);
+            List<T> t2 = rules.get(e);
+            return comparator.compare(e,t2) > 0 ? new Rule<>(e, t2) : new Rule<>(t2, e);
         }).collect(Collectors.toSet());
         this.comparator = comparator;
     }
 
 
-
-
     /**
-     * Apply completeRules until a normal form is reached
+     * Apply completeRules until a normal form is reached using the rules that set up the system
      *
-     * @param pInput
-     * @return
+     * @param pInput list to rewrite
+     * @return a rewritten copy of the list
      */
     public List<T> rewrite(List<T> pInput){
         return rewriteWith(pInput,rules);
     }
 
-    public List<T> getNormForm(List<T> pInput){
+    /**
+     * Returns a rewriten version of the input list the input remains unchanged.
+     * @param pInput the list to rewrite
+     * @return a rewritten copy of the list
+     */
+    public List<T> getUniqueNF(List<T> pInput){
         complete();
         return rewriteWith(pInput,completeRules);
     }
 
-    private List<T> rewriteWith(List<T> pInput, Set<Rule<T>> r) {
+
+    /**
+     * Helper function for replacements withs {@see RewriteSystem::rewrite} and {@see getUniqueNF()}
+     * @param pInput   the input to rewrite
+     * @param ruleSet  the set of rules to use
+     * @return a rewritten copy of the input list
+     */
+    private List<T> rewriteWith(List<T> pInput, Set<Rule<T>> ruleSet) {
         LinkedList<T> input= new LinkedList<>(pInput);
         boolean doneSomething = false;
         do {
             doneSomething=false;
-            for (Rule<T> rule : r) {
+            for (Rule<T> rule : ruleSet) {
                 doneSomething=rule.apply(input)||doneSomething;
             }
         }while (doneSomething);
@@ -60,19 +71,53 @@ public class RewriteSystem<T> {
     }
 
 
+
+    /**
+     * Changes the list to its rewriten version (input is changed).
+     * Only considers completeRules that are already computed!
+     * A call to {@see RewriteSystem::complete()}
+     *
+     * @param list the list to rewrite
+     */
+    private void changeToUniqueNF(LinkedList<T> list){
+        boolean doneSomething = false;
+        do {
+            doneSomething=false;
+            for (Rule<T> rule : completeRules) {
+                doneSomething=rule.apply(list)||doneSomething;
+                //Heuristic if a rule was applied, start from te beginning
+                //Simple rules are in the beginning of the list due to the order of
+                //the TreeSet complete rules
+                if(doneSomething) break;
+            }
+        }while (doneSomething);
+    }
+
+    /**
+     * Complete the rule system
+     *
+     * This is done by looking for overlap in the rules and extracting critical pairs from them. From each critical
+     * pair, a new rule is made. Rules whose "from" part can be rewritten are removed, they are no longer
+     * useful because we choose to always apply the new rule first.
+     *
+     * This is the "Knuth–Bendix completion algorithm"
+     */
     public void complete() {
         if(completeRules != null) {
             return;
         }
 
-        this.completeRules = new HashSet<>();
+        this.completeRules = new TreeSet<>((o1, o2) -> o1.compareTo(o2,comparator));
         this.completeRules.addAll(rules);
 
-        Set<Rule<T>.CriticalPair> criticalPairs = new HashSet<>();
-        Set<Rule<T>> toProcess = new HashSet<>(completeRules);
+        //Using treesets with a special order does not speedup
+        Collection<Rule<T>.CriticalPair> criticalPairs = new HashSet<>();
+
+
+        Collection<Rule<T>> toProcess = new HashSet<>(completeRules);
         while (true){
 
-            //Find th critical pairs
+            //Collect the critical pairs
             for (Rule<T> rule1 : completeRules) {
                 //We only need to look at combinations with new completeRules
                 for (Rule<T> rule2 : toProcess) {
@@ -82,20 +127,26 @@ public class RewriteSystem<T> {
             }
             toProcess.clear(); //done with these
 
-            //No critical pairs left
+
+            //palatalise the first optimisation of the rules
+            criticalPairs.parallelStream().forEach(c -> {this.changeToUniqueNF(c.to1);this.changeToUniqueNF(c.to2);});
+
+            //No critical pairs left, we are done
             if (criticalPairs.size() == 0) break;
 
-            int useless = 0;
-            int added = 0;
+
             for (Rule<T>.CriticalPair criticalPair : criticalPairs) {
-                List<T> to1 = this.getNormForm(criticalPair.to1);
-                List<T> to2 = this.getNormForm(criticalPair.to2);
+                // check if anny new rule applies
+                this.changeToUniqueNF(criticalPair.to1);
+                this.changeToUniqueNF(criticalPair.to2);
+
+                LinkedList<T> to1 = criticalPair.to1;
+                LinkedList<T> to2 = criticalPair.to2;
 
                 int compare = comparator.compare(to1, to2);
 
                 if(compare==0) {
                     //new rule is 0 transformation after further simplification
-                    useless++;
                     continue;
                 }
 
@@ -106,7 +157,6 @@ public class RewriteSystem<T> {
                 if(completeRules.add(tRule)) {
                     //Rule was new
                     toProcess.add(tRule);
-                    added++;
                 }
 
             }
@@ -175,4 +225,5 @@ public class RewriteSystem<T> {
     public Set<Rule<T>> getRules() {
         return rules.stream().map(Rule::new).collect(Collectors.toSet());
     }
+
 }

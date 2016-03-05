@@ -7,12 +7,11 @@ import java.util.*;
 import static org.junit.Assert.*;
 
 /**
- * Created by beardhatcode on 23/02/16.
+ * Created by Robbert Gurdeep Singh on 23/02/16.
  */
 public class RewriteSystemTest {
-    public static final Character[] CHARACTERS = new Character[]{'L'};
 
-    Comparator<Collection<Character>> shortLex = (o1, o2) -> {
+    private Comparator<Collection<Character>> shortLex = (o1, o2) -> {
         if (o1.size() != o2.size()) return o1.size() - o2.size();
         return o1.toString().compareTo(o2.toString());
     };

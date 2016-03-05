@@ -3,10 +3,8 @@ import org.junit.Test;
 import java.io.File;
 import java.io.FileInputStream;
 
-import static org.junit.Assert.*;
-
 /**
- * Created by beardhatcode on 17/02/16.
+ * Created by Robbert Gurdeep Singh on 17/02/16.
  */
 public class MainTest {
 

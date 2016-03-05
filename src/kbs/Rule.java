@@ -7,9 +7,9 @@ import java.util.*;
  * String finding algorithm of Knuth-Moris-Pratt is used on linked list to ease working with changing lengths.
  * @author  Robbert Gurdeep Singh
  */
-public class Rule<T> {
-    private List<T> from;
-    private List<T> to;
+public class Rule<T>  {
+    private final List<T> from;
+    private final List<T> to;
     private int lut[];
 
     /**
@@ -133,8 +133,6 @@ public class Rule<T> {
         List<T> t2 = other.to;
 
         Set<CriticalPair> result= new HashSet<>();
-        int start = 0;
-        int cur = 0;
 
         for(int overlap = Math.min(f1.size(), f2.size()); overlap > 0; overlap--){
             boolean ok = true;
@@ -144,15 +142,6 @@ public class Rule<T> {
                 }
             }
             if(ok){
-                //Construct from part
-                LinkedList<T> critFrom = new LinkedList<>();
-                for(int i = 0; i< f1.size(); i++){
-                    critFrom.add(f1.get(i));
-                }
-                for(int i = overlap; i < f2.size(); i++){
-                    critFrom.add(f2.get(i));
-                }
-
                 //Construct result by applying "this" first
                 LinkedList<T> critTo1 = new LinkedList<>();
 
@@ -171,8 +160,9 @@ public class Rule<T> {
                 for(int i = 0; i < t2.size(); i++){
                     critTo2.add(t2.get(i));
                 }
+
                 if(!critTo1.equals(critTo2)) {
-                    result.add(new CriticalPair(critFrom, critTo1, critTo2));
+                    result.add(new CriticalPair(critTo1, critTo2));
                 }
             }
         }
@@ -184,13 +174,13 @@ public class Rule<T> {
 
     /**
      * find out if this Rule can optimize the given rule
-     * @param other
+     * @param rule the rule that might be optimised
      * @return
      */
-    public boolean canOptimize(Rule<T> other){
-        if(this.equals(other)) return false;
+    public boolean canOptimize(Rule<T> rule){
+        if(this.equals(rule)) return false;
 
-        ListIterator<T> iter = other.from.listIterator();
+        ListIterator<T> iter = rule.from.listIterator();
         //Look for an occurrence
         int curPos = 0;
         int length = from.size();
@@ -220,8 +210,7 @@ public class Rule<T> {
 
         Rule<?> rule = (Rule<?>) o;
 
-        if (!from.equals(rule.from)) return false;
-        return to.equals(rule.to);
+        return from.equals(rule.from) && to.equals(rule.to);
     }
 
     @Override
@@ -239,47 +228,52 @@ public class Rule<T> {
                 '}';
     }
 
-    CriticalPair createCriticalPair(LinkedList<T> from, LinkedList<T> to1, LinkedList<T> to2){
-        return new CriticalPair( from,  to1, to2);
+    CriticalPair createCriticalPair(LinkedList<T> to1, LinkedList<T> to2){
+        return new CriticalPair(to1, to2);
+    }
+
+
+    public int compareTo(Rule<T> o, Comparator<Collection<T>> comp) {
+
+        int diff = comp.compare(this.from, o.from);
+            if(diff == 0){
+                diff = comp.compare(this.to,o.to);
+            }
+        
+
+        return diff;
+    }
+
+
+    public List<T> getFrom() {
+        return new ArrayList<>(from);
+    }
+
+    public List<T> getTo() {
+        return new ArrayList<>(to);
     }
 
     public class CriticalPair{
-        public final LinkedList<T> from;
         public final LinkedList<T> to1;
         public final LinkedList<T> to2;
 
-        public CriticalPair(LinkedList<T> from, LinkedList<T> to1, LinkedList<T> to2) {
-            if(from == null  || to1 ==null || to2 == null){
+        public CriticalPair(LinkedList<T> to1, LinkedList<T> to2) {
+            if( to1 ==null || to2 == null){
                 throw new IllegalArgumentException("from, to1 and t2 must not be null");
             }
-
-            this.from = from;
             this.to1 = to1;
             this.to2 = to2;
         }
 
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            CriticalPair that = (CriticalPair) o;
-
-            if (!from.equals(that.from)) return false;
-            return (to1.equals(that.to1) && to2.equals(that.to2)) || (to1.equals(that.to2) && to2.equals(that.to1));
-        }
 
         @Override
         public int hashCode() {
-            int result = from.hashCode();
-            result = 31 * result + to1.hashCode() + to2.hashCode();
-            return result;
+            return to1.hashCode() + to2.hashCode();
         }
 
         @Override
         public String toString() {
             return "CriticalPair{" +
-                    "from=" + from +
                     ", to1=" + to1 +
                     ", to2=" + to2 +
                     '}';

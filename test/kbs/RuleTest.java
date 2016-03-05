@@ -1,6 +1,5 @@
 package kbs;
 
-import com.sun.xml.internal.ws.util.StringUtils;
 import org.junit.Test;
 
 import java.util.LinkedList;
@@ -51,23 +50,26 @@ public class RuleTest {
 
     @Test
     public void testGetCritical() throws Exception {
-        Rule<Character>.CriticalPair expected1,expected2,expected3;
+        Rule<Character>.CriticalPair expected1,expected2;
 
         Rule<Character> a = makeCharacterRule("ABCD","P");
         Rule<Character> b = makeCharacterRule("CDEF","Q");
         Set<Rule<Character>.CriticalPair> critical = a.getCritical(b);
         assertEquals(1,critical.size());
-        expected1 = a.createCriticalPair(makeList("ABCDEF"), makeList("ABQ"), makeList("PEF"));
-        assertTrue(critical.contains(expected1));
+        final Rule<Character> finalA1 = a;
+        assertTrue(critical.stream()
+                .anyMatch(e->e.toString().equals(finalA1.createCriticalPair(makeList("PEF"), makeList("ABQ")).toString())));
 
         a = makeCharacterRule("ABXX","P");
         b = makeCharacterRule("XXEF","Q");
         critical = a.getCritical(b);
         assertEquals(2,critical.size());
-        expected1 = a.createCriticalPair(makeList("ABXXEF"), makeList("ABQ"), makeList("PEF"));
-        expected2 = a.createCriticalPair(makeList("ABXXXEF"), makeList("ABXQ"), makeList("PXEF"));
-        assertTrue(critical.contains(expected1));
-        assertTrue(critical.contains(expected2));
+        final Rule<Character> finalA = a;
+        assertTrue(critical.stream()
+                .anyMatch(e->e.toString().equals(finalA.createCriticalPair(makeList("PEF"), makeList("ABQ")).toString())));
+        assertTrue(critical.stream()
+                .anyMatch(e->e.toString().equals(finalA.createCriticalPair(makeList("PXEF"), makeList("ABXQ")).toString())));
+
 
         a = makeCharacterRule("ABXX","P");
         b = makeCharacterRule("XXEF","Q");
