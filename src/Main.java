@@ -1,4 +1,3 @@
-import kbs.Paster;
 import kbs.RewriteSystem;
 import parser.Parser;
 
@@ -18,20 +17,16 @@ import java.util.stream.Collectors;
  */
 public class Main {
 
-    private static final Comparator<Collection<Parser.Element>> SHORTLEX = (o1, o2) -> {
+    private static final Comparator<Collection<Character>> SHORTLEX = (o1, o2) -> {
         if (o1.size() != o2.size()) return o1.size() - o2.size();
-        Iterator<Parser.Element> iterator1 = o1.iterator();
-        Iterator<Parser.Element> iterator2 = o2.iterator();
+        Iterator<Character> iterator1 = o1.iterator();
+        Iterator<Character> iterator2 = o2.iterator();
         while (true) {
-            boolean hasNext1 = iterator1.hasNext();
-            boolean hasNext2 = iterator2.hasNext();
-            if (!hasNext1 && !hasNext2) return 0;
-            if (!hasNext1) return -1;
-            if (!hasNext2) return 1;
-            Parser.Element next1 = iterator1.next();
-            Parser.Element next2 = iterator2.next();
-            if (next1.hashCode() == next2.hashCode()) continue;
-            return next1.hashCode() - next2.hashCode();
+            if (!iterator1.hasNext()) return 0;
+            Character next1 = iterator1.next();
+            Character next2 = iterator2.next();
+            if (next1.equals(next2)) continue;
+            return next1.compareTo(next2);
         }
 
     };
@@ -41,41 +36,20 @@ public class Main {
      * parser result.
      */
     private static int sizeOfGroup(List<Parser.Result> list) {
-        // this implementation simply returns the number of relations
 
-        Map<List<Parser.Element>, List<Parser.Element>> rules = list.stream()
-                .collect(Collectors.toMap(c -> c.left, c -> c.right));
+        //Convert to characters
+        Map<List<Character>, List<Character>> rules = list.stream()
+                .collect(Collectors.toMap(
+                        c -> c.left.stream().map(e -> e.ch).collect(Collectors.toList()),
+                        c -> c.right.stream().map(e -> e.ch).collect(Collectors.toList()))
+                );
 
-        Set<Parser.Element> elements = new HashSet<>();
-        list.forEach(e -> {
-            e.left.forEach(elements::add);
-            e.right.forEach(elements::add);
-        });
-
-
-        RewriteSystem<Parser.Element> rewriteSystem = new RewriteSystem<>(rules, SHORTLEX);
-
-        Set<List<Parser.Element>> baseForms = new HashSet<>();
-        Paster<Parser.Element> pasteSet = new Paster<>(elements);
-
-        Set<List<Parser.Element>> sugestions = new HashSet<>();
-        sugestions.add(new ArrayList<>());
-
-        Set<List<Parser.Element>> newSugestions = new HashSet<>();
-
-        while (sugestions.size() > 0) {
-            newSugestions.clear();
-            for (List<Parser.Element> sugestion : sugestions) {
-                List<Parser.Element> clean = rewriteSystem.getNormForm(sugestion);
-                if (baseForms.add(clean)) {
-                    System.out.println("Base: "+clean);
-                    newSugestions.add(clean);
-                }
-            }
-            sugestions = pasteSet.paste(newSugestions);
-        }
+        RewriteSystem<Character> rewriteSystem = new RewriteSystem<>(rules, SHORTLEX);
 
 
+        Collection<List<Character>> baseForms = rewriteSystem.calcNormalForms();
+
+        //baseForms.stream().forEach(System.out::println);
         //rewriteSystem.getCompleteRules().stream().forEach(System.out::println);
 
         return baseForms.size();

@@ -124,6 +124,49 @@ public class RewriteSystem<T> {
 
     }
 
+    /**
+     * Calculate the normal forms of the system.
+     *
+     * This is done by completing the system and applying the completed rules to the empty sting and
+     * every letter occurring in the rules that were supplied at creation time. Then we add every letter
+     * occurring in the rules that were supplied at creation time to every newly found normal form.
+     * this process is repeated untlil there are no new normal forms found
+     *
+     * @return a set of unique normal forms to which every input containing only letters that occur in the rules
+     * will be reduced to using {@see getUniqueNF()}
+     */
+    public Set<List<T>> calcNormalForms(){
+        complete();
+        Set<T> elements = new HashSet<>();
+        rules.forEach(e -> {
+            e.getFrom().forEach(elements::add);
+            e.getTo().forEach(elements::add);
+        });
+
+
+        Set<List<T>> baseForms = new HashSet<>();
+        Paster<T> pasteSet = new Paster<>(elements);
+
+        Set<List<T>> suggestion = new HashSet<>();
+        suggestion.add(new ArrayList<>());
+
+        Set<List<T>> newSuggestions = new HashSet<>();
+
+        while (suggestion.size() > 0) {
+            newSuggestions.clear();
+            for (List<T> sugestion : suggestion) {
+                List<T> clean = this.getUniqueNF(sugestion);
+                if (baseForms.add(clean)) {
+                    newSuggestions.add(clean);
+                }
+            }
+            suggestion = pasteSet.paste(newSuggestions);
+        }
+
+        return baseForms;
+    }
+
+
     public Set<Rule<T>> getCompleteRules() {
         complete();
         return completeRules.stream().map(Rule::new).collect(Collectors.toSet());
